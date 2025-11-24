@@ -58,6 +58,9 @@ RUN yarn install --production && yarn cache clean
 # Copiar build (para producción)
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
+# Copiar modelos de Vosk necesarios en runtime
+COPY --from=base --chown=nestjs:nodejs /app/models ./models
+
 # Crear directorio uploads
 RUN mkdir -p ./uploads && chown -R nestjs:nodejs ./uploads
 
