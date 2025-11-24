@@ -29,6 +29,7 @@
   "dependencies": {
     "@bull-board/api": "^6.13.1",
     "@bull-board/express": "^6.13.1",
+    "@nestjs/config": "^4.0.2",
     "@google/genai": "^1.27.0",
     "@google/generative-ai": "^0.24.1",
     "@nestjs/bullmq": "^11.0.4",
