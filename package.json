@@ -27,7 +27,6 @@
     "migration:revert": "node -r ts-node/register -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./src/database/data-source.ts migration:revert"
   },
   "dependencies": {
-    "ffi-napi": "npm:@makeomatic/ffi-napi@4.2.0",
     "@bull-board/api": "^6.13.1",
     "@bull-board/express": "^6.13.1",
     "@google/genai": "^1.27.0",
@@ -48,6 +47,7 @@
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
     "express": "^5.1.0",
+    "ffi-napi": "npm:@makeomatic/ffi-napi@4.2.0",
     "ioredis": "^5.8.1",
     "jszip": "^3.10.1",
     "openai": "^6.6.0",
