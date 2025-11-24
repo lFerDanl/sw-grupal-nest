@@ -1,0 +1,49 @@
+# ====================================
+# ⚙️ Worker NestJS + Whisper.cpp
+# ====================================
+FROM node:22-alpine AS base
+WORKDIR /app
+
+# Dependencias para compilar y correr Whisper.cpp
+RUN apk add --no-cache git cmake build-base ffmpeg bash python3
+
+# Node
+COPY package.json yarn.lock ./
+RUN yarn install
+COPY . .
+
+# ====================================
+# Build: compilar Whisper.cpp y NestJS
+# ====================================
+FROM base AS builder
+
+COPY ./whisper.cpp ./whisper.cpp
+
+# Compilar whisper.cpp
+RUN cd whisper.cpp && make
+
+# Build NestJS
+RUN yarn build
+
+# ====================================
+# Runtime
+# ====================================
+FROM node:22-alpine
+WORKDIR /app
+
+RUN apk add --no-cache ffmpeg bash
+
+# Copiar node_modules, whisper.cpp compilado y uploads
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=builder /app/whisper.cpp ./whisper.cpp
+COPY --from=builder /app/uploads ./uploads
+COPY --from=builder /app/dist ./dist
+
+# Variable de entorno por defecto
+ENV NODE_ENV=production
+
+# Ya no movemos el binario: usamos la ruta original
+ENV WHISPER_BIN=./whisper.cpp/bin/main
+
+# CMD dinámico
+CMD ["/bin/sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then yarn start:dev; else node dist/media/media.processor.js; fi"]

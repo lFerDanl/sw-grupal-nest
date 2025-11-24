@@ -1,0 +1,103 @@
+version: "3.8"
+
+services:
+  postgresDB:
+    image: pgvector/pgvector:pg14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sw-grupal
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: "localhost"
+      DB_PORT: 5436
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "sw-grupal"
+      DB_SSL: "false"
+      JWT_SECRET: "utilizar esta palabra en produccion"
+      PORT: 3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: development   # 🔹 Cambiar a "production" para prod
+    volumes:
+      - .:/app                 # ⚡ Monta todo el código local en dev
+      - /app/node_modules      # Evita conflicto host/contenedor
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgresDB
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: worker
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgresDB:5432/sw-grupal
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: development   # 🔹 Cambiar a "production" para prod
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgresDB
+      - redis
+
+
+//----------------------------configs:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      # 🔥 CORREGIDO: Usar el nombre del servicio, no localhost
+      DB_HOST: postgresDB
+      DB_PORT: 5432           # Puerto INTERNO del contenedor
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: sw-grupal
+      DB_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET:-utilizar esta palabra en produccion}
+      PORT: 3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: ${NODE_ENV:-development}
+      
+      # 🔹 Agrega aquí las demás variables que tengas en tu .env
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      # etc...
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgresDB
+      - redis
+    networks:
+      - app-network
