@@ -31,12 +31,8 @@ import { IAModule } from './ia/ia.module';
         autoLoadEntities: true,
         synchronize: false,
         //----------
-        ssl: process.env.POSTGRES_SSL === "true",
-        extra: {
-          ssl:
-            {
-              rejectUnauthorized: false,
-            },
+        ssl: {
+          rejectUnauthorized: false,
         },
       }),
     }),
